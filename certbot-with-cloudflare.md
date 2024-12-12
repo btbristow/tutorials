@@ -19,7 +19,7 @@ Make sure you have:
 
 On your NAS, create directories for Certbot. Then, add your Cloudflare API token to the Certbot configuration file. 
 
-> **Note**: These steps use `sudo` to create folders and files with an octal permission of `600`. You can apply less restrictive permissions, but warnings may appear when you run Certbot.
+> **Note**: These steps use `sudo` to create `root`-owned folders with `700` permissions. You can use less restrictive permissions for easier access, but Certbot may show warnings if you change ownership.
 
 1. Create Certbot directories:
 
@@ -86,25 +86,31 @@ If you like Certbot, please consider supporting our work by:
 
 In Synology DiskStation Manager, download the certificate to your computer and then install it on your NAS. Once the certificate is installed, you'll use scheduled tasks to automate renewals.
 
-1. In Synology DiskStation Manager, go to `.../docker/certbot/etc_letsencrypt/live` and download the `mydomain.com` folder to your computer.  
+1. In Synology DiskStation Manager, go to `.../docker/certbot/etc_letsencrypt/live` and download the folder named after your domain.
+
+    <img src="assets/download-certs.png" alt="Download certificates" style="width:40%;">
 
 1. In Synology DiskStation Manager, go to **Control Panel** > **Security** > **Certificate**.
 
 1. In the **Certificate** tab, click **Add**.
 
-1. Under **Please choose an action**, select **Add a new certificate**. Then, click **Next**. 
+    <img src="assets/add-cert.png" alt="Add a certificate" style="width:40%;">
 
-1. In the dialog that appears, select **Import certificate** and **Set as default**. Then, click **Next**.
+1. In the **Create Certificate** dialog that appears, under **Please choose an action**, select **Add a new certificate** and click **Next**. 
 
-1. Under **Import certificate files**, click **Browse** and choose the following files from the downloaded folder:
+1. In the **Create Certificate** dialog, select **Import certificate** and **Set as default certificate**. Then, click **Next**.
+
+    <img src="assets/import-cert.png" alt="Import a certificate" style="width:40%;">
+
+1. In the **Create Certificate** dialog under **Import Certificate Files**, click **Browse** and choose the following files from the folder you downloaded:
 
     * Private Key — `privkey.pem`
     * Certificate — `cert.pem`
     * Intermediate Certificate — `fullchain.pem` 
 
-1. Click **OK**. 
+1. In the **Create Certificate** dialog, click **OK**. 
 
-    Synology DiskStation Manager applies the new certificate and restarts affected services.
+    Synology DiskStation Manager applies the certificate and restarts affected services.
 
 ## Configure the certificate check script
 
@@ -164,35 +170,41 @@ To test the certificate check script before adding it to a scheduled task, run i
 
 ## Schedule certificate renewals
 
-Let's Encrypt certificates expire every 90 days, but you can use the Synology Task Scheduler to automate renewals. To do this, you schedule two tasks: one to renew the certificates in the Certbot folder and another to run `check_certs.sh` and move them into place. 
+Let's Encrypt certificates expire every 90 days, but you can automate renewals with the Synology Task Scheduler. To do this, schedule two tasks: one to renew your certificates and another to install them using `check_certs.sh`. 
 
 1. In Synology DiskStation Manager, go to **Control Panel** > **Task Scheduler**.
 
-1. In **Create** > **Scheduled Task** > **User Defined Script**, add two repeating tasks which run as `root` one hour apart. In the **Task Settings** tab under **Run Command**, enter the following:
+1. Using **Create** > **Scheduled Task** > **User Defined Script**, add two repeating tasks which run as `root` one hour apart.
 
-    a. For the script to *renew certificates* in the Certbot folder:
+    <img src="assets/renew-certs.png" alt="Create Task" style="width:40%;">
 
-        ```bash
-        /bin/bash
-        sudo docker run -v /volume1/docker/certbot/etc_letsencrypt:/etc/letsencrypt \
-            -v /volume1/docker/certbot/lib_letsencrypt:/var/lib/letsencrypt \
-            -v /volume1/docker/certbot/logs:/var/log/letsencrypt \
-            --rm \
-            --cap-drop=all \
-            certbot/dns-cloudflare:latest \
-            renew
-        ```
+    For each task, in the **Task Settings** tab under **Run Command**, enter the following.
 
-    b. For the script to *move certificates into place*:
+    a. For the script to **renew certificates** in the Certbot folder:
 
-        ```bash
-        /bin/bash
-        cd /path/to/script # Change into the script directory 
-        bash /path/to/script/check_certs.sh --update
-        ```∏
+    ```bash
+    /bin/bash
+    sudo docker run -v /volume1/docker/certbot/etc_letsencrypt:/etc/letsencrypt \
+        -v /volume1/docker/certbot/lib_letsencrypt:/var/lib/letsencrypt \
+        -v /volume1/docker/certbot/logs:/var/log/letsencrypt \
+        --rm \
+        --cap-drop=all \
+        certbot/dns-cloudflare:latest \
+        renew
+    ```
+    b. For the script to **install certificates** on your NAS:
+
+    ```bash
+    /bin/bash
+    cd /path/to/script # Change into the script directory 
+    bash /path/to/script/check_certs.sh --update
+    ```
+
 
 ## See also
 
-* [Tips for creating tasks and writing scripts in Task Scheduler](https://kb.synology.com/en-us/DSM/tutorial/common_mistake_in_task_scheduler_script)
-* [Running containers](https://docs.docker.com/engine/containers/run/#runtime-privilege-and-linux-capabilities)
-* [Create API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/)
+* [Create API token | Cloudflare Docs](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/)
+* [Running containers | Docker Docs](https://docs.docker.com/engine/containers/run/#runtime-privilege-and-linux-capabilities)
+* [Tips for creating tasks and writing scripts in Task Scheduler | Synology Knowledge Center](https://kb.synology.com/en-us/DSM/tutorial/common_mistake_in_task_scheduler_script)
+
+

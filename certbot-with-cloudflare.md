@@ -100,7 +100,7 @@ In Synology DiskStation Manager, download the certificate to your computer and t
 
     * Private Key — `privkey.pem`
     * Certificate — `cert.pem`
-    * Intermediate Certificate — `chain.pem` 
+    * Intermediate Certificate — `fullchain.pem` 
 
 1. Click **OK**. 
 

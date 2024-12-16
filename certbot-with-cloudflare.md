@@ -128,7 +128,7 @@ Download the certificate check script and run it once to create a configuration 
     sudo ./check_certs.sh
     ```
 
-3. Open the configuration file in a text editor and add your certificate's Common Name (CN) and file path: 
+3. Open the newly created "`cert_config.json` file in a text editor and add your certificate file path in `cert_path` for the section where you see your certificate's common name ( the update script should have populated these CN names for you ): 
 
     ```json
     {

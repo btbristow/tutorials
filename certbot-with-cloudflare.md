@@ -195,9 +195,8 @@ Let's Encrypt certificates expire every 90 days, but you can automate renewals w
     b. For the script to **install certificates** on your NAS:
 
     ```bash
-    /bin/bash
-    cd /path/to/script # Change into the script directory 
-    bash /path/to/script/check_certs.sh --update
+    cd /path/to/script # Change into the script directory where ran the script and where cert_config.json resides 
+    ./check_certs.sh --update
     ```
 
 

@@ -196,7 +196,7 @@ Let's Encrypt certificates expire every 90 days, but you can automate renewals w
 
     ```bash
     cd /path/to/script # Change into the directory of the update script and where cert_config.json resides.
-    ./check_certs.sh --update
+    bash ./check_certs.sh --update
     ```
 
 

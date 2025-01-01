@@ -128,7 +128,7 @@ Download the certificate check script and run it once to create a configuration 
     sudo ./check_certs.sh
     ```
 
-3. Open the configuration file in a text editor and add your certificate's Common Name (CN) and file path: 
+3. Open the newly created "`cert_config.json` file in a text editor and add your certificate file path in `cert_path` for the section where you see your certificate's common name ( the update script should have populated these CN names for you ): 
 
     ```json
     {
@@ -195,9 +195,8 @@ Let's Encrypt certificates expire every 90 days, but you can automate renewals w
     b. For the script to **install certificates** on your NAS:
 
     ```bash
-    /bin/bash
-    cd /path/to/script # Change into the script directory 
-    bash /path/to/script/check_certs.sh --update
+    cd /path/to/script # Change into the script directory which holds cert_config.json
+    bash ./check_certs.sh --update
     ```
 
 

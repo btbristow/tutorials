@@ -3,13 +3,13 @@
 This guide explains how to use [Certbot](https://certbot.eff.org) to obtain SSL/TLS certificates from [Let's Encrypt](https://letsencrypt.org), apply certificates to your Synology NAS, and automate renewals with custom scripts.
 
 ## Overview
-The following steps use Docker to run Certbot, which completes the [DNS-01 challenge](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge), validating a domain you own against a text record created via the Cloudflare API and then downloading certificates. This method is ideal for home servers, since you don't need to expose your server to the web. 
+The following steps use Docker to run Certbot, which completes the [DNS-01 challenge](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge), validating a domain you own against a text record created via the Cloudflare API, and then downloading certificates. This method is ideal for home servers since you don't need to expose your server to the web. 
 
 ## Before you start
 
 Make sure you have:
 
-* A Synology NAS with DiskStation Manager 7 or later installed.
+* A Synology NAS with DiskStation Manager 7 or later.
 * SSH acess with permission to run `sudo` and Docker commands from a terminal emulator.
 * A registered domain using Cloudflare for DNS management.
 * A Cloudflare API token with **Edit zone DNS** permissions, as described in [Create API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/) in the Cloudflare documentation.
@@ -19,7 +19,7 @@ Make sure you have:
 
 On your NAS, create directories for Certbot. Then, add your Cloudflare API token to the Certbot configuration file. 
 
-> **Note**: These steps use `sudo` to create `root`-owned folders with `700` permissions. You can use less restrictive permissions for easier access, but Certbot may show warnings if you change ownership.
+> **Note**: These steps use `sudo` to create folders and files owned by `root`. If you change folder ownership, Certbot may show warnings or fail to run.
 
 1. Create Certbot directories:
 
@@ -44,7 +44,7 @@ On your NAS, create directories for Certbot. Then, add your Cloudflare API token
 
 Use the following Docker Run command to launch a temporary container which runs Certbot, mounts directories, and takes the DNS-01 challenge. 
 
-> **Tip**: The following example obtains a [wildcard certificate](https://knowledge.digicert.com/general-information/what-is-a-wildcard-certificate), but you can get another type, such a single-domain certificate. To do this, replace `*.mydomain.com` with `mydomain.com`.
+> **Tip**: The following example obtains a [wildcard certificate](https://knowledge.digicert.com/general-information/what-is-a-wildcard-certificate), but you can get another type, such as a single-domain certificate. To do so, replace `*.mydomain.com` with `mydomain.com`.
 
 ```bash
 sudo docker run -v /volume1/docker/certbot/etc_letsencrypt:/etc/letsencrypt \
@@ -86,7 +86,7 @@ If you like Certbot, please consider supporting our work by:
 
 In Synology DiskStation Manager, download the certificate to your computer and then install it on your NAS. Once the certificate is installed, you'll use scheduled tasks to automate renewals.
 
-1. In Synology DiskStation Manager, go to `.../docker/certbot/etc_letsencrypt/live` and download the folder named after your domain.
+1. In Synology DiskStation Manager, go to `.../docker/certbot/etc_letsencrypt/live` and download the folder named for your domain.
 
     <img src="assets/download-certs.png" alt="Download certificates" style="width:40%;">
 
@@ -96,13 +96,13 @@ In Synology DiskStation Manager, download the certificate to your computer and t
 
     <img src="assets/add-cert.png" alt="Add a certificate" style="width:40%;">
 
-1. In the **Create Certificate** dialog that appears, under **Please choose an action**, select **Add a new certificate** and click **Next**. 
+1. In the **Create Certificate** dialog, under **Please choose an action**, select **Add a new certificate** and click **Next**. 
 
 1. In the **Create Certificate** dialog, select **Import certificate** and **Set as default certificate**. Then, click **Next**.
 
     <img src="assets/import-cert.png" alt="Import a certificate" style="width:40%;">
 
-1. In the **Create Certificate** dialog under **Import Certificate Files**, click **Browse** and choose the following files from the folder you downloaded:
+1. In the **Create Certificate** dialog, under **Import Certificate Files**, click **Browse** and choose the following files from the downloaded folder:
 
     * Private Key — `privkey.pem`
     * Certificate — `cert.pem`
@@ -114,7 +114,7 @@ In Synology DiskStation Manager, download the certificate to your computer and t
 
 ## Configure the certificate check script
 
-Download the certificate check script and run it once to create a configuration file. Then, add your certificate details to the file.
+Download the certificate check script and run it once to create a configuration file where you add your certificate details.
 
 1. Download the script and make it executable:
 
@@ -122,13 +122,13 @@ Download the certificate check script and run it once to create a configuration 
     sudo wget -O check_certs.sh https://raw.githubusercontent.com/telnetdoogie/synology-scripts/main/check_certs.sh && \
     sudo chmod +x check_certs.sh
     ```
-2. Run the script to create the configuration file:
+2. Run the script to create a configuration file called `cert_config.json`:
 
     ```bash
     sudo ./check_certs.sh
     ```
 
-3. Open the newly created "`cert_config.json` file in a text editor and add your certificate file path in `cert_path` for the section where you see your certificate's common name ( the update script should have populated these CN names for you ): 
+3. In a text editor, edit `cert_config.json`. Add your certificate's Common Name (CN) and the path to the directory with the downloaded certificate files:
 
     ```json
     {
@@ -142,14 +142,14 @@ Download the certificate check script and run it once to create a configuration 
     ```
 ## (Optional) Test the certificate check script
 
-To test the certificate check script before adding it to a scheduled task, run it in **check-only** mode to see which certificates need updates and then in **update mode** to install new certificates.
+To test the certificate check script, run it in **check-only** mode to see which certificates need updates. Then, run the script in **update mode** to install new certificates.
 
 > **Tip**: Use flags to do a dry run, skip your VPN server, or force updates:
 >
 > | Flag           | Description                                                                                                                                                     |
 > |----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
 > | `--novpnregen` | Skip VPN certificates used by [Synology VPN Server](https://www.synology.com/en-us/dsm/packages/VPNCenter) so you do not need to regenerate VPN client files.   |
-> | `--dry-run`    | Troubleshoot by running the script without updating certificates or restarting applications.                                                                    |
+> | `--dry-run`    | Run the script without updating certificates or restarting applications.                                                                    |
 > | `--force`      | Apply new certificates even if the current ones are not near expiration or mismatched.                                                                          |
 
 1. Check the current certificates on your NAS:
@@ -166,7 +166,7 @@ To test the certificate check script before adding it to a scheduled task, run i
     sudo ./check_certs.sh --update
     ```
 
-    The script copies new certificates to your live certificate folders and restarts corresponding Synology services. If certificates don't expire for more than 60 days, no changes are made.
+    The script copies new certificates to your live certificate folders and restarts Synology services. If certificates don't expire for more than 60 days, no changes are made.
 
 ## Schedule certificate renewals
 
@@ -195,7 +195,7 @@ Let's Encrypt certificates expire every 90 days, but you can automate renewals w
     b. For the script to **install certificates** on your NAS:
 
     ```bash
-    cd /path/to/script # Change into the script directory which holds cert_config.json
+    cd /path/to/script # Change into the directory with the script and configuration file
     bash ./check_certs.sh --update
     ```
 

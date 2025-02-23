@@ -38,7 +38,7 @@ On your NAS, create directories for Certbot. Then, add your Cloudflare API token
     ```bash
     echo "# Cloudflare API token used by Certbot
     dns_cloudflare_api_token = your-cloudflare-api-token" | \
-    sudo tee /volume2/docker/certbot/lib_letsencrypt/cloudflare.ini > /dev/null
+    sudo tee /volume1/docker/certbot/lib_letsencrypt/cloudflare.ini > /dev/null
     ```
 ## Run Certbot with Docker
 
